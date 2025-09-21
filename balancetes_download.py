@@ -71,26 +71,28 @@ def atualizar_balancetes():
 
 def gerar_index():
     """
-    Cria um CSV com os links RAW dos arquivos dentro de Balancetes/
+    Gera um arquivo Balancetes/index_balancetes.csv com todos os links RAW dos CSVs
     """
     root_dir = "Balancetes"
     linhas = []
 
-    # URL RAW do seu repo (ajuste para o SEU usuário e repo)
+    # URL base correta para RAW
     base_raw = "https://raw.githubusercontent.com/Jonathan-rms/Bacen_Data/main"
 
     for dirpath, _, files in os.walk(root_dir):
         for file in files:
-            if file.endswith(".csv"):  # pega todos os CSVs
-                # Caminho relativo para o arquivo
-                caminho_rel = os.path.join(dirpath, file).replace("\\", "/")
-                # Monta a URL RAW
+            if file.lower().endswith(".csv") and "index_balancetes" not in file.lower():
+                # Força extensão maiúscula
+                file_upper = file[:-4] + ".CSV"
+
+                # Caminho relativo, garantindo separadores "/"
+                caminho_rel = os.path.join(dirpath, file_upper).replace("\\", "/")
+
                 url = f"{base_raw}/{caminho_rel}"
-                # Extrai o ano_mes do nome do arquivo (antes da palavra SOCIEDADES)
                 ano_mes = file.split("SOCIEDADES")[0]
                 linhas.append([ano_mes, url])
 
-    # Salvar o índice dentro da pasta Balancetes
+    # Salvar o index dentro de Balancetes/
     index_path = os.path.join(root_dir, "index_balancetes.csv")
 
     with open(index_path, "w", newline="", encoding="utf-8-sig") as f:
