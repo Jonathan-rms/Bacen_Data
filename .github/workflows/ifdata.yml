@@ -2,8 +2,11 @@ name: Atualizar IFDATA
 
 on:
   schedule:
-    - cron: "0 12 2 * *"   # roda todo dia 2 do mês às 12h UTC (09h no Brasil aprox.)
-  workflow_dispatch:        # permite rodar manualmente
+    - cron: "0 12 2 * *"   # roda todo dia 2 do mês às 12h UTC (09h no Brasil)
+  workflow_dispatch:        # permite rodar manualmente também
+
+permissions:
+  contents: write   # 🔑 dá permissão para commitar arquivos de volta
 
 jobs:
   build:
@@ -11,6 +14,8 @@ jobs:
     steps:
       - name: Checkout código
         uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Configurar Python
         uses: actions/setup-python@v4
