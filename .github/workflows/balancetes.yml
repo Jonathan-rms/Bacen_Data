@@ -27,7 +27,7 @@ jobs:
           pip install requests python-dateutil
 
       - name: Baixar balancetes
-        run: balancetes_download.py
+        run: python balancetes_download.py
 
       - name: Commit arquivos novos
         run: |
