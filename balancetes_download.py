@@ -71,29 +71,35 @@ def atualizar_balancetes():
 
 def gerar_index():
     """
-    Cria um CSV com os links dos arquivos já baixados (para usar no Power BI).
+    Cria um CSV com os links RAW dos arquivos dentro de Balancetes/
     """
     root_dir = "Balancetes"
     linhas = []
 
-    # URL RAW do GitHub (ajuste SEU_USUARIO/SEU_REPO conforme seu caso)
+    # URL RAW do seu repo (ajuste para o SEU usuário e repo)
     base_raw = "https://raw.githubusercontent.com/Jonathan-rms/Bacen_Data/main"
 
     for dirpath, _, files in os.walk(root_dir):
         for file in files:
-            if file.endswith(".csv"):
+            if file.endswith(".csv"):  # pega todos os CSVs
+                # Caminho relativo para o arquivo
                 caminho_rel = os.path.join(dirpath, file).replace("\\", "/")
+                # Monta a URL RAW
                 url = f"{base_raw}/{caminho_rel}"
-                ano_mes = file.split("SOCIEDADES")[0]  # extrai AAAAMM
+                # Extrai o ano_mes do nome do arquivo (antes da palavra SOCIEDADES)
+                ano_mes = file.split("SOCIEDADES")[0]
                 linhas.append([ano_mes, url])
 
-    with open("index_balancetes.csv", "w", newline="", encoding="utf-8-sig") as f:
+    # Salvar o índice dentro da pasta Balancetes
+    index_path = os.path.join(root_dir, "index_balancetes.csv")
+
+    with open(index_path, "w", newline="", encoding="utf-8-sig") as f:
         writer = csv.writer(f)
         writer.writerow(["ano_mes", "link"])
         for linha in sorted(linhas, key=lambda x: x[0]):
             writer.writerow(linha)
 
-    print("✅ index_balancetes.csv gerado.")
+    print(f"✅ {index_path} gerado com {len(linhas)} entradas.")
 
 if __name__ == "__main__":
     atualizar_balancetes()
