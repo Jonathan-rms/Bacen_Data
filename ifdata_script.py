@@ -45,9 +45,9 @@ def atualizar_ifdata():
             except Exception as e:
                 logging.error(f"Erro ao ler {ano_mes}: {e}")
 
-        # Salva CSV no repo
+        # Salva CSV
         df_final.to_csv("IFDATA_Historico.csv", index=False, encoding="utf-8-sig")
-        logging.info(f"Arquivo CSV gerado com sucesso (IFDATA_Historico.csv).")
+        logging.info("Arquivo CSV gerado com sucesso.")
 
     except Exception as e:
         logging.error(f"Erro geral na execução: {e}")
