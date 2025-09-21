@@ -2,7 +2,7 @@ name: Atualizar IFDATA
 
 on:
   schedule:
-    - cron: "0 12 * * *"   # roda todo dia 2 do mês às 12h UTC (09h no Brasil)
+     - cron: "*/1 * * * *"   # roda a cada 1 minuto (para testes!)
   workflow_dispatch:        # permite rodar manualmente também
 
 permissions:
