@@ -20,7 +20,7 @@ def baixar_e_descompactar(ano_mes):
     ano = ano_mes[:4]
     arquivo_zip = f"{ano_mes}SOCIEDADES.csv.zip"
     url = f"{BASE_URL}/{arquivo_zip}"
-    pasta = f"balancetes/{ano}"
+    pasta = f"Balancetes/{ano}"
     os.makedirs(pasta, exist_ok=True)
 
     # Nome final do CSV
