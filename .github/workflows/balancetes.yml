@@ -24,15 +24,16 @@ jobs:
 
       - name: Instalar dependências
         run: |
-          pip install requests python-dateutil
+          pip install requests python-dateutil pandas
 
-      - name: Baixar balancetes
-        run: python balancetes_download.py   # seu script
+      - name: Baixar balancetes e gerar índice
+        run: python balancetes_download.py
 
       - name: Commit arquivos novos
         run: |
           git config --local user.email "actions@github.com"
           git config --local user.name "github-actions"
           git add Balancetes/
-          git commit -m "Atualização automática - Balancetes" || echo "Nenhum arquivo novo"
+          git add index_balancetes.csv
+          git commit -m "Atualização automática - Balancetes + Index" || echo "Nenhum arquivo novo"
           git push
