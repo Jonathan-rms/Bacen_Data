@@ -12,7 +12,7 @@ logging.basicConfig(
 )
 
 
-def gerar_anos_meses(inicio="202412"):
+def gerar_anos_meses(inicio="202403"):
     """Gera lista de AnoMes até o mês atual"""
     inicio_dt = datetime.strptime(inicio, "%Y%m")
     hoje = datetime.today()
