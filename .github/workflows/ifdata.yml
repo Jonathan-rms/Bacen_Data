@@ -2,12 +2,11 @@ name: Atualizar IFDATA
 
 on:
   schedule:
-    - cron: "0 12 * * *"   # todo dia 2 às 12h UTC (09h Brasília)
-  workflow_dispatch:        # também pode rodar manualmente
+    - cron: "0 12 2 * *"   # roda todo dia 2 do mês às 12h UTC (09h no Brasil)
+  workflow_dispatch:        # permite rodar manualmente também
 
 permissions:
-  contents: write   # permite alterar repo
-  issues: write     # permite criar issues
+  contents: write   # 🔑 dá permissão para commitar arquivos de volta
 
 jobs:
   build:
@@ -15,6 +14,8 @@ jobs:
     steps:
       - name: Checkout código
         uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Configurar Python
         uses: actions/setup-python@v4
@@ -35,12 +36,3 @@ jobs:
           git add IFDATA_Historico.csv
           git commit -m "Atualização automática [skip ci]" || echo "Nenhuma alteração"
           git push
-
-      - name: Criar issue com o log da execução
-        if: always()   # roda mesmo se falhar
-        uses: peter-evans/create-issue-from-file@v4
-        with:
-          title: "Execução do Workflow - ${{ github.run_id }}"
-          content-filepath: IFDATA_LOG.txt
-          labels: |
-            workflow-log
