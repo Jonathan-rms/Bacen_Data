@@ -2,7 +2,7 @@ name: Atualizar Balancetes
 
 on:
   schedule:
-    - cron: "0 12 15 * *"   # roda todo dia 15 às 12h UTC (09h Brasília)
+    - cron: "0 12 15 * *"   # todo dia 15 às 12h UTC (09h Brasília)
   workflow_dispatch:
 
 permissions:
@@ -27,12 +27,12 @@ jobs:
           pip install requests python-dateutil
 
       - name: Baixar balancetes
-        run: python balancetes_download.py
+        run: python balancetes_download.py   # seu script
 
       - name: Commit arquivos novos
         run: |
           git config --local user.email "actions@github.com"
           git config --local user.name "github-actions"
-          git add balancetes/
+          git add Balancetes/
           git commit -m "Atualização automática - Balancetes" || echo "Nenhum arquivo novo"
           git push
