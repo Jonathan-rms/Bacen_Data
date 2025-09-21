@@ -49,9 +49,8 @@ def baixar_e_descompactar(ano_mes: str):
         # Tenta abrir como arquivo zip
         with zipfile.ZipFile(io.BytesIO(r.content)) as z:
             print(f"📦 Arquivos dentro do zip ({ano_mes}): {z.namelist()}")
-
             for nome in z.namelist():
-                # Salva cada arquivo contido no ZIP (geralmente apenas 1 CSV)
+                # Salva cada arquivo contido no ZIP
                 caminho_final = os.path.join(pasta, nome)
                 with z.open(nome) as f_in, open(caminho_final, "wb") as f_out:
                     f_out.write(f_in.read())
@@ -66,24 +65,23 @@ def atualizar_balancetes():
     """
     Atualiza incrementalmente os balancetes disponíveis.
     """
-    # Ajuste aqui o ponto de início -> Dezembro/2023 (202312) funciona bem
     meses = gerar_anos_meses(inicio="202312")
-
     for mes in meses:
         baixar_e_descompactar(mes)
 
-if __name__ == "__main__":
-    atualizar_balancetes()
-
 def gerar_index():
+    """
+    Cria um CSV com os links dos arquivos já baixados (para usar no Power BI).
+    """
     root_dir = "Balancetes"
     linhas = []
-    # Ajuste o link abaixo com SEU_USUARIO e SEU_REPO
-    base_raw = "https://github.com/Jonathan-rms/Bacen_Data/tree/main/Balancetes"
+
+    # URL RAW do GitHub (ajuste SEU_USUARIO/SEU_REPO conforme seu caso)
+    base_raw = "https://raw.githubusercontent.com/Jonathan-rms/Bacen_Data/main"
 
     for dirpath, _, files in os.walk(root_dir):
         for file in files:
-            if file.endswith(".csv") and "Consolidado" not in dirpath:
+            if file.endswith(".csv"):
                 caminho_rel = os.path.join(dirpath, file).replace("\\", "/")
                 url = f"{base_raw}/{caminho_rel}"
                 ano_mes = file.split("SOCIEDADES")[0]  # extrai AAAAMM
@@ -92,8 +90,11 @@ def gerar_index():
     with open("index_balancetes.csv", "w", newline="", encoding="utf-8-sig") as f:
         writer = csv.writer(f)
         writer.writerow(["ano_mes", "link"])
-        # Ordena pela chave ano_mes
         for linha in sorted(linhas, key=lambda x: x[0]):
             writer.writerow(linha)
 
     print("✅ index_balancetes.csv gerado.")
+
+if __name__ == "__main__":
+    atualizar_balancetes()
+    gerar_index()
