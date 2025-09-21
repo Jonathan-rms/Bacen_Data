@@ -2,6 +2,7 @@ import os
 import requests
 import zipfile
 import io
+import csv
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
 
@@ -73,3 +74,26 @@ def atualizar_balancetes():
 
 if __name__ == "__main__":
     atualizar_balancetes()
+
+def gerar_index():
+    root_dir = "Balancetes"
+    linhas = []
+    # Ajuste o link abaixo com SEU_USUARIO e SEU_REPO
+    base_raw = "https://github.com/Jonathan-rms/Bacen_Data/tree/main/Balancetes"
+
+    for dirpath, _, files in os.walk(root_dir):
+        for file in files:
+            if file.endswith(".csv") and "Consolidado" not in dirpath:
+                caminho_rel = os.path.join(dirpath, file).replace("\\", "/")
+                url = f"{base_raw}/{caminho_rel}"
+                ano_mes = file.split("SOCIEDADES")[0]  # extrai AAAAMM
+                linhas.append([ano_mes, url])
+
+    with open("index_balancetes.csv", "w", newline="", encoding="utf-8-sig") as f:
+        writer = csv.writer(f)
+        writer.writerow(["ano_mes", "link"])
+        # Ordena pela chave ano_mes
+        for linha in sorted(linhas, key=lambda x: x[0]):
+            writer.writerow(linha)
+
+    print("✅ index_balancetes.csv gerado.")
