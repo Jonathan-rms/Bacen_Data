@@ -1,0 +1,38 @@
+name: Atualizar Balancetes
+
+on:
+  schedule:
+    - cron: "0 12 15 * *"   # roda todo dia 15 às 12h UTC (09h Brasília)
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Configurar Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Instalar dependências
+        run: |
+          pip install requests python-dateutil
+
+      - name: Baixar balancetes
+        run: balancetes_download.py
+
+      - name: Commit arquivos novos
+        run: |
+          git config --local user.email "actions@github.com"
+          git config --local user.name "github-actions"
+          git add balancetes/
+          git commit -m "Atualização automática - Balancetes" || echo "Nenhum arquivo novo"
+          git push
