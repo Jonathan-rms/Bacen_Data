@@ -33,7 +33,6 @@ jobs:
         run: |
           git config --local user.email "actions@github.com"
           git config --local user.name "github-actions"
-          git add Balancetes/
-          git add index_balancetes.csv
+          git add Balancetes/index_balancetes.csv
           git commit -m "Atualização automática - Balancetes + Index" || echo "Nenhum arquivo novo"
           git push
