@@ -63,9 +63,9 @@ def baixar_e_descompactar(ano_mes: str, force=False):
     pasta = f"Balancetes/{ano}"
     os.makedirs(pasta, exist_ok=True)
 
-    arquivo_zip = f"{ano_mes}SOCIEDADES.csv.zip"
+    arquivo_zip = f"{ano_mes}BLOPRUDENCIAL.csv.zip"
     url = f"{BASE_URL}/{arquivo_zip}"
-    caminho_csv = os.path.join(pasta, f"{ano_mes}SOCIEDADES.csv")
+    caminho_csv = os.path.join(pasta, f"{ano_mes}BLOPRUDENCIAL.csv")
     caminho_meta = caminho_csv + ".meta"
 
     print(f"➡️ Tentando processar {url} ...")
@@ -222,7 +222,7 @@ def gerar_index():
                 caminho_rel = os.path.join(dirpath, file_upper).replace("\\", "/")
 
                 url = f"{base_raw}/{caminho_rel}"
-                ano_mes = file.split("SOCIEDADES")[0]
+                ano_mes = file.split("BLOPRUDENCIAL")[0]
                 linhas.append([ano_mes, url])
 
     # Salvar o index dentro de Balancetes/
