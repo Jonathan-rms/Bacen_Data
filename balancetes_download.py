@@ -7,18 +7,19 @@ import hashlib
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
 
-# --- CONFIGURAÇÕES DE FONTES ---
-# Definimos as fontes, URLs e o sufixo do nome do arquivo esperado para cada uma.
+# --- CONFIGURAÇÕES DE FONTES (AJUSTADO) ---
 SOURCES = [
     {
         "folder": "Prudencial",
         "url": "https://www.bcb.gov.br/content/estabilidadefinanceira/cosif/Conglomerados-prudenciais",
-        "suffix": "BLOPRUDENCIAL"  # Ex: 202312BLOPRUDENCIAL.csv.zip
+        "suffix": "BLOPRUDENCIAL" 
+        # Gera: YYYYMMBLOPRUDENCIAL.csv.zip
     },
     {
         "folder": "Sociedades",
         "url": "https://www.bcb.gov.br/content/estabilidadefinanceira/cosif/Sociedades",
-        "suffix": "ESTBAN"         # Ex: 202312ESTBAN.csv.zip
+        "suffix": "SOCIEDADES"     
+        # Gera: YYYYMMSOCIEDADES.csv.zip (Conforme descoberto no seu log)
     }
 ]
 
@@ -78,19 +79,19 @@ def baixar_e_descompactar(ano_mes: str, source_config: dict, force=False):
     pasta = f"Balancetes/{folder_name}/{ano}"
     os.makedirs(pasta, exist_ok=True)
 
+    # Constrói o nome do arquivo com base no sufixo correto
     arquivo_zip = f"{ano_mes}{suffix}.csv.zip"
     url = f"{base_url}/{arquivo_zip}"
+    
     caminho_csv = os.path.join(pasta, f"{ano_mes}{suffix}.csv")
     caminho_meta = caminho_csv + ".meta"
 
     print(f"➡️ [{folder_name}] Processando {url} ...")
 
-    # Se não existe local, simplesmente baixa
     if not os.path.exists(caminho_csv) or force:
         _baixar_e_salvar(url, caminho_csv, caminho_meta, ano_mes, folder_name)
         return
 
-    # Se local existe, tenta HEAD para comparar headers
     try:
         head = requests.head(url, timeout=30, allow_redirects=True)
     except Exception as e:
@@ -114,6 +115,7 @@ def baixar_e_descompactar(ano_mes: str, source_config: dict, force=False):
             _baixar_e_salvar(url, caminho_csv, caminho_meta, ano_mes, folder_name, headers=relevant)
             return
     else:
+        # Se head falhar (404), pode ser que o arquivo ainda não exista para aquele mês
         print(f"ℹ️ [{folder_name}/{ano_mes}] HEAD indisponível (HTTP {head.status_code if head else 'N/A'}). Baixando para hash.")
         _baixar_e_salvar(url, caminho_csv, caminho_meta, ano_mes, folder_name, compare_hash=True)
         return
@@ -122,12 +124,11 @@ def _baixar_e_salvar(url, caminho_csv, caminho_meta, ano_mes, folder_name, heade
     try:
         r = requests.get(url, timeout=60)
         if r.status_code != 200:
-            print(f"❌ [{folder_name}/{ano_mes}] Não encontrado (HTTP {r.status_code}) - URL: {url}")
+            print(f"❌ [{folder_name}/{ano_mes}] Não encontrado (HTTP {r.status_code}) - URL Tentada: {url}")
             return
 
         with zipfile.ZipFile(io.BytesIO(r.content)) as z:
             nomes = z.namelist()
-            # print(f"📦 Arquivos no zip: {nomes}")
             
             nome_csv = None
             for nome in nomes:
@@ -135,13 +136,12 @@ def _baixar_e_salvar(url, caminho_csv, caminho_meta, ano_mes, folder_name, heade
                     nome_csv = nome
                     break
             if not nome_csv:
-                print(f"⚠️ [{folder_name}/{ano_mes}] ZIP sem CSV conhecido.")
+                print(f"⚠️ [{folder_name}/{ano_mes}] ZIP baixado mas sem CSV conhecido.")
                 return
 
             with z.open(nome_csv) as f_in:
                 csv_bytes = f_in.read()
 
-            # Funções auxiliares para salvar meta
             def save_current_meta():
                 meta_to_save = headers or {
                     "ETag": r.headers.get("ETag"),
@@ -171,21 +171,17 @@ def _baixar_e_salvar(url, caminho_csv, caminho_meta, ano_mes, folder_name, heade
                     print(f"🔄 [{folder_name}/{ano_mes}] Hash diferente -> Atualizado.")
                     return
 
-            # Se headers forçaram atualização ou fallback
             with open(caminho_csv, "wb") as f_out:
                 f_out.write(csv_bytes)
             save_current_meta()
             print(f"✅ [{folder_name}/{ano_mes}] Atualizado.")
 
     except zipfile.BadZipFile:
-        print(f"⚠️ [{folder_name}/{ano_mes}] Arquivo não é ZIP válido.")
+        print(f"⚠️ [{folder_name}/{ano_mes}] Arquivo baixado não é um ZIP válido.")
     except Exception as e:
         print(f"⚠️ [{folder_name}/{ano_mes}] Erro: {e}")
 
 def atualizar_balancetes(force=False):
-    """
-    Atualiza incrementalmente os balancetes para todas as fontes configuradas.
-    """
     meses = gerar_anos_meses(inicio="202312")
     
     for source in SOURCES:
@@ -194,9 +190,6 @@ def atualizar_balancetes(force=False):
             baixar_e_descompactar(mes, source, force=force)
 
 def gerar_index():
-    """
-    Gera um index_balancetes.csv mapeando TODAS as pastas (Prudencial e Sociedades).
-    """
     root_dir = "Balancetes"
     if not os.path.exists(root_dir):
         print("Pasta Balancetes não existe. Nada a indexar.")
@@ -208,18 +201,14 @@ def gerar_index():
     for dirpath, _, files in os.walk(root_dir):
         for file in files:
             if file.lower().endswith(".csv") and "index_balancetes" not in file.lower():
-                # Força extensão maiúscula para consistência se necessário
-                # file_upper = file[:-4] + ".CSV" 
-                # (Se quiser manter o nome original do arquivo, use 'file')
                 file_final = file 
-                
                 caminho_rel = os.path.join(dirpath, file_final).replace("\\", "/")
                 url = f"{base_raw}/{caminho_rel}"
                 
-                # Tenta extrair AnoMes do início do arquivo (ex: 202312BLOPRUDENCIAL -> 202312)
+                # Tenta extrair AnoMes
                 ano_mes = file[:6]
                 
-                # Identifica tipo baseado na pasta ou nome
+                # Identifica tipo
                 tipo = "Indefinido"
                 if "Prudencial" in dirpath:
                     tipo = "Prudencial"
@@ -232,7 +221,6 @@ def gerar_index():
     with open(index_path, "w", newline="", encoding="utf-8-sig") as f:
         writer = csv.writer(f)
         writer.writerow(["ano_mes", "tipo", "link"])
-        # Ordena por ano_mes e depois por tipo
         for linha in sorted(linhas, key=lambda x: (x[0], x[1])):
             writer.writerow(linha)
 
